@@ -23,15 +23,18 @@ pipeline {
             }
         }
         stage('Commit and Push') {
-            steps {
-                sh '''
-                git config --global user.email "jenkins@example.com"
-                git config --global user.name "Jenkins Automation"
-                git add admin.conf
-                git commit -m "Updated admin.conf from Jenkins"
-                git push https://${GIT_CREDENTIALS}@github.com/prajwal1014/jenkins_kubernetes2.git main
-                '''
-            }
+    steps {
+        withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+            sh '''
+            git config --global user.email "jenkins@example.com"
+            git config --global user.name "Jenkins Automation"
+            git add admin.conf
+            git commit -m "Updated admin.conf from Jenkins"
+            git push https://$GITHUB_TOKEN@github.com/prajwal1014/jenkins_kubernetes2.git main
+            '''
         }
+    }
+}
+
     }
 }
