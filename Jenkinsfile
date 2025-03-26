@@ -1,40 +1,42 @@
 pipeline {
     agent any
+
     environment {
-        GIT_REPO = 'https://github.com/prajwal1014/jenkins_kubernetes2.git'
-        GIT_CREDENTIALS = 'github-token'
-        K8S_CREDENTIALS = 'k8s-admin-conf'
-        ADMIN_CONF_FILE = 'admin.conf'
+        REPO_URL = "https://github.com/prajwal1014/jenkins_kubernetes2.git"
+        BRANCH = "main"
     }
+
     stages {
         stage('Checkout Repository') {
-    steps {
-        git branch: 'main', 
-            url: "https://github.com/prajwal1014/jenkins_kubernetes2.git", 
-            credentialsId: "github-token"
-    }
-}
+            steps {
+                git branch: "${BRANCH}", url: "${REPO_URL}"
+            }
+        }
 
         stage('Retrieve admin.conf') {
             steps {
-                withCredentials([file(credentialsId: "${K8S_CREDENTIALS}", variable: "ADMIN_CONF")]) {
-                    sh "cp ${ADMIN_CONF} ${ADMIN_CONF_FILE}"
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                    sh '''
+                    export KUBECONFIG=$KUBECONFIG
+                    kubectl config view --raw > admin.conf
+                    '''
                 }
             }
         }
-        stage('Commit and Push') {
-    steps {
-        withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
-            sh '''
-            git config --global user.email "jenkins@example.com"
-            git config --global user.name "Jenkins Automation"
-            git add admin.conf
-            git commit -m "Updated admin.conf from Jenkins"
-            git push https://$GITHUB_TOKEN@github.com/prajwal1014/jenkins_kubernetes2.git main
-            '''
-        }
-    }
-}
 
+        stage('Commit and Push') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'github-token', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+                    sh '''
+                    git config --global user.email "jenkins@example.com"
+                    git config --global user.name "Jenkins Automation"
+
+                    git add admin.conf
+                    git commit -m "Updated admin.conf from Jenkins"
+                    git push https://$GIT_USER:$GIT_PASS@github.com/prajwal1014/jenkins_kubernetes2.git main
+                    '''
+                }
+            }
+        }
     }
 }
