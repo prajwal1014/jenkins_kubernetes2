@@ -8,10 +8,13 @@ pipeline {
     }
     stages {
         stage('Checkout Repository') {
-            steps {
-                git branch: 'main', url: "${GIT_REPO}", credentialsId: "${GIT_CREDENTIALS}"
-            }
-        }
+    steps {
+        git branch: 'main', 
+            url: "https://github.com/prajwal1014/jenkins_kubernetes2.git", 
+            credentialsId: "github-token"
+    }
+}
+
         stage('Retrieve admin.conf') {
             steps {
                 withCredentials([file(credentialsId: "${K8S_CREDENTIALS}", variable: "ADMIN_CONF")]) {
